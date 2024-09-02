@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import ticon from "../images/twitter_icon.jpg";
+import ticon from "../assets/images/twitter_icon.jpg";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth } from "../firebase";
 import { Link, useNavigate } from "react-router-dom";

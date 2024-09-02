@@ -1,0 +1,21 @@
+@font-face {
+  font-family: "nanumfont";
+  src: url('./assets/fonts/NanumSquareR.ttf');
+}
+@font-face {
+  font-family: "nanumfontBold";
+  src: url('./assets/fonts/NanumSquareB.ttf');
+}
+@font-face {
+  font-family: "nanumfontECBold";
+  src: url('./assets/fonts/NanumSquareEB.ttf');
+}
+:root {
+  --font-nanumfont: "nanumfont";
+  --font-nanumfontBold: "nanumfontBold";
+  --font-nanumfontECBold: "nanumfontECBold";
+}
+
+body {
+  font-family: var(--font-nanumfont) !important;
+}

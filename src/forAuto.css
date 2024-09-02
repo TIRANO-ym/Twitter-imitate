@@ -23,4 +23,8 @@
       opacity: 0.8;
     }
   }
+
+  height: 100vh;
+  display: flex;
+  justify-content: center;
 }

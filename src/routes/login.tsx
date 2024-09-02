@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import ticon from "../images/twitter_icon.jpg";
+import ticon from "../assets/images/twitter_icon.jpg";
 import { Link, useNavigate } from "react-router-dom";
 import { FirebaseError } from "firebase/app";
 import { signInWithEmailAndPassword } from "firebase/auth";
