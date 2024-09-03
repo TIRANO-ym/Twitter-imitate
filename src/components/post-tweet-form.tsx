@@ -17,7 +17,7 @@ const TextArea = styled.textarea`
   font-size: 16px;
   color: white;
   background-color: black;
-  width; 100%;
+  width: 100%;
   resize: none;
   font-family: var(--font-nanumfont);
   &::placeholder {
@@ -36,7 +36,8 @@ const AttachFileButton = styled.label`
   border-radius: 20px;
   border: 1px solid #1d9bf0;
   font-size: 14px;
-  font-family: var(--font-nanumfontBold);
+  // font-family: var(--font-nanumfontBold);
+  font-weight: bold;
   cursor: pointer;
 `;
 
@@ -52,7 +53,8 @@ const SubmitBtn = styled.input`
   border-radius: 20px;
   font-size: 16px;
   cursor: pointer;
-  font-family: var(--font-nanumfontBold);
+  // font-family: var(--font-nanumfontBold);
+  font-weight: bold;
   &:hover,
   &:active {
     opacity: 0.9;
@@ -91,7 +93,7 @@ export default function PostTweetForm() {
         username: user.displayName || "Anonymous",
         userId: user.uid,
       });
-
+      // 사진 업로드
       if (file) {
         const locationRef = ref(
           storage,
