@@ -14,6 +14,7 @@ const Wrapper = styled.div`
   border: 1px solid #ffffff80;
   border-radius: 15px;
   .dropdown-menu {
+    position: relative;
     text-align: right;
     .menu-button {
       width: 30px;
@@ -167,7 +168,8 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
       margin: "auto",
       border: "1px solid gray",
       borderRadius: "10px",
-      padding: "20px"
+      padding: "20px",
+      left: "13%"
     }
   };
   const onEditTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -177,7 +179,7 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
   const [editPhoto, setEditPhoto] = useState<File | null>(null);
   const [editPhotoUrl, setEditPhotoUrl] = useState('');
   // todo: 사진 삭제 기능 (화면을 어떻게...)
-  const [deletePhoto, setDeletePhoto] = useState(false);
+  // const [deletePhoto, setDeletePhoto] = useState(false);
   const onPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const {files} = e.target;
     if (!user) return;
@@ -214,9 +216,9 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
         photo: url
       });
     }
-    else if (deletePhoto) {
+    // else if (deletePhoto) {
       
-    }
+    // }
     
     setModalOpen(false);
     setIsUpdating(false);
@@ -305,7 +307,7 @@ const Menu = styled.div`
   border-radius: 3px;
   opacity: 1;
   visibility: visible;
-  transform: translate(-35%, 5%);
+  transform: translate(-60%, 5%);
   z-index: 9;
 }
 `;

@@ -71,9 +71,9 @@ export default function PostTweetForm() {
   }
   const onFilechange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const {files} = e.target;
-    // 1MB 이하의 파일 1개만 업로드
+    // 2MB 이하의 파일 1개만 업로드
     // todo: 적절한 오류메시지 보여주기
-    if(files && files.length === 1 && (files[0].size <= 1 * 1024 * 1024)) {
+    if(files && files.length === 1 && (files[0].size <= 2 * 1024 * 1024)) {
       setFile(files[0]);
     }
   }
