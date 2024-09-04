@@ -6,6 +6,7 @@ import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage
 import Modal from "react-modal";
 import React, { useState } from "react";
 import useDetectClose from "../hooks/userDetectClose";
+import { DeleteIcon, EditIcon } from "./icon-component";
 
 const Wrapper = styled.div`
   display: grid;
@@ -81,11 +82,25 @@ const PhotoUpload = styled.label`
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
+  .phoho-edit-options {
+    display: none;
+    background-color: #00000090;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding: 5px;
+    svg:hover {
+      opacity: 0.8;
+    }
+  }
   svg {
     width: 100px;
   }
   &:hover {
-    opacity: 0.9;
+    .phoho-edit-options {
+      display: flex !important;
+    }
   }
 `;
 const PhotoInput = styled.input`
@@ -155,6 +170,7 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
     setModalOpen(false);
     setEditPhoto(null);
     setEditPhotoUrl('');
+    setDeletePhoto(false);
   };
   const modalStyles = {
     overlay: {
@@ -178,24 +194,33 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
   // 트윗 수정 - 이미지
   const [editPhoto, setEditPhoto] = useState<File | null>(null);
   const [editPhotoUrl, setEditPhotoUrl] = useState('');
-  // todo: 사진 삭제 기능 (화면을 어떻게...)
-  // const [deletePhoto, setDeletePhoto] = useState(false);
+  const [deletePhoto, setDeletePhoto] = useState(false);
   const onPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const {files} = e.target;
     if (!user) return;
-    if (files && files.length === 1) {
+    if (files && files.length === 1 && (files[0].size <= 2 * 1024 * 1024)) {
       const file = files[0];
       setEditPhoto(file);
       // 임시 파일 url 지정
-      if (FileReader && files && files.length) {
+      if (FileReader) {
         var fr = new FileReader();
         fr.onload = () => {
+          setDeletePhoto(false);
           setEditPhotoUrl(`${fr.result}`);
         };
         fr.readAsDataURL(file);
       }
+    } else {
+      // todo: 적절한 메시지 표기
     }
   };
+  const onPhotoDelete = (e: React.ChangeEvent) => {
+    e.preventDefault();
+    setEditPhoto(null);
+    setEditPhotoUrl('');
+    setDeletePhoto(true);
+  };
+  // 트윗 수정 모달에서 Update 클릭
   const onEdit = async() => {
     if (isUpdating || !editText) return;
     setIsUpdating(true);
@@ -204,11 +229,11 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
     await updateDoc(tweetRef, {
       tweet: editText
     });
-    // 사진 수정됐으면 수정
+    // 사진 수정됐으면 수정 (upsert)
     if (editPhoto) {
       const locationRef = ref(
         storage,
-        `tweets/${userId}-${username}/${id}`
+        `tweets/${userId}/${id}`
       );
       const result = await uploadBytes(locationRef, editPhoto);
       const url = await getDownloadURL(result.ref);
@@ -216,9 +241,14 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
         photo: url
       });
     }
-    // else if (deletePhoto) {
-      
-    // }
+    // 사진 삭제
+    else if (deletePhoto && photo) {
+      const photoRef = ref(storage, `tweets/${userId}/${id}`);
+      await deleteObject(photoRef);
+      await updateDoc(tweetRef, {
+        photo: null
+      });
+    }
     
     setModalOpen(false);
     setIsUpdating(false);
@@ -230,14 +260,17 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
       <Column>
         <Username>{username}</Username>
         <Payload>{tweet}</Payload>
-        <Modal isOpen={isModalOpen} onRequestClose={closeModal} style={modalStyles}>
+        <Modal isOpen={isModalOpen} onAfterClose={closeModal} onRequestClose={closeModal} style={modalStyles}>
           <ModalWrapper>
             <Column>
               <TextArea maxLength={180} onChange={onEditTextChange} value={editText}/>
             </Column>
             <Column>
               <PhotoUpload htmlFor="photo">
-                {(editPhoto || photo) ? (
+                <div className="phoho-edit-options">
+                  <EditIcon/> <DeleteIcon onClick={onPhotoDelete}/>
+                </div>
+                {(!deletePhoto && (editPhoto || photo)) ? (
                   <Photo src={(editPhotoUrl || photo)} />
                 ) : (
                   <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -275,17 +308,12 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
               <Ul>
                 <Li>
                   <LinkWrapper onClick={openModal}>
-                    <a>Edit Tweet</a> <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                      <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                      <path clipRule="evenodd" fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-                    </svg>
+                    <a>Edit Tweet</a> <EditIcon/>
                   </LinkWrapper>
                 </Li>
                 <Li>
                   <LinkWrapper onClick={onDelete} style={{color: 'tomato'}}>
-                    <a>Delete Tweet</a> <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                      <path clipRule="evenodd" fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" />
-                    </svg>
+                    <a>Delete Tweet</a> <DeleteIcon/>
                   </LinkWrapper>
                 </Li>
               </Ul>

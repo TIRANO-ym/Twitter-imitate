@@ -6,6 +6,7 @@ import { Unsubscribe, updateProfile } from "firebase/auth";
 import { collection, limit, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { ITweet } from "../components/timeline";
 import Tweet from "../components/tweet";
+import { DeleteIcon, EditIcon } from "../components/icon-component";
 
 const Wrapper = styled.div`
   display: flex;
@@ -14,17 +15,38 @@ const Wrapper = styled.div`
   gap: 20px;
 `;
 const AvatarUpload = styled.label`
-  width: 80px;
-  overflow: hidden;
-  height: 80px;
+overflow: hidden;
+  width: 180px;
+  height: 180px;
   border-radius: 50%;
   background-color: #1d9bf0;
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
+  .phoho-edit-options {
+    display: none;
+    justify-content: space-around;
+    background-color: #00000090;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding: 5px;
+    svg {
+      width: 60px;
+    }
+    svg:hover {
+      opacity: 0.8;
+    }
+  }
   svg {
-    width: 50px;
+    width: 50%;
+  }
+  &:hover {
+    .phoho-edit-options {
+      display: flex !important;
+    }
   }
 `;
 const AvatarImg = styled.img`
@@ -83,6 +105,15 @@ export default function Profile() {
       });
     }
   };
+  const onAvatarDelete = async (e: React.ChangeEvent) => {
+    e.preventDefault();
+    const ok = confirm("Are you sure you want to delete your avatar?");
+    if (!ok || !user) return;
+    await updateProfile(user, {
+      photoURL: ""
+    });
+    setAvatar(null);
+  }
 
   // 본인의 트윗들만 가져오기
   const [tweets, setTweets] = useState<ITweet[]>([]);
@@ -155,6 +186,9 @@ export default function Profile() {
   return (
     <Wrapper>
       <AvatarUpload htmlFor="avatar">
+        <div className="phoho-edit-options">
+          <EditIcon/> <DeleteIcon onClick={onAvatarDelete}/>
+        </div>
         {Boolean(avatar) ? (
           <AvatarImg src={`${avatar}`} />
         ) : (
