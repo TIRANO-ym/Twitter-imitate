@@ -7,6 +7,7 @@ import { collection, limit, onSnapshot, orderBy, query, where } from "firebase/f
 import { ITweet } from "../components/timeline";
 import Tweet from "../components/tweet";
 import { DeleteIcon, EditIcon } from "../components/icon-component";
+import ErrorMessage from "../components/error-component";
 
 const Wrapper = styled.div`
   display: flex;
@@ -77,7 +78,7 @@ const Name = styled.span`
 `;
 const EditNameInput = styled.input`
   font-size: 22px;
-  width: 150px;
+  width: 250px;
   margin-right: 10px;
   background-color: rgba(0, 0, 0, 1);
   border: 1px solid gray;
@@ -88,6 +89,7 @@ const EditNameInput = styled.input`
 
 export default function Profile() {
   const user = auth.currentUser;
+  const [errMsg, setErrMsg] = useState('');
 
   // 프로필 이미지 변경
   const [avatar, setAvatar] = useState(user?.photoURL);
@@ -166,10 +168,13 @@ export default function Profile() {
     setInputedName(e.target.value);
   };
   const onSubmit = async() => {
-    // todo: 조건 명시해주기
-    if (isUpdating || !user || !inputedName || inputedName.length > 20) {
+    if (isUpdating || !user) {
+      return;
+    } else if (!inputedName || inputedName.length > 20) {
+      setErrMsg('20자 이하의 멋진 이름을 입력해주세요!');
       return;
     }
+    setErrMsg('');
     // displayname 업데이트
     setIsUpdating(true);
     await updateProfile(user, { displayName: inputedName });
@@ -181,6 +186,7 @@ export default function Profile() {
     if (isUpdating) return;
     setShowInput(false);
     setInputedName(username);
+    setErrMsg('');
   }
 
   return (
@@ -228,6 +234,7 @@ export default function Profile() {
             </svg>
           </NameWrapper>
       }
+      <ErrorMessage message={errMsg}/>
       <Tweets>{tweets.map(tweet => <Tweet key={tweet.id} {...tweet}></Tweet>)}</Tweets>
     </Wrapper>
   )

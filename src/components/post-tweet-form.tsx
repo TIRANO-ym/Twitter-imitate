@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { auth, db, storage } from "../firebase";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import ErrorMessage from "./error-component";
 
 const Form = styled.form`
   display: flex;
@@ -65,23 +66,28 @@ export default function PostTweetForm() {
   const [isLoading, setLoading] = useState(false);
   const [tweet, setTweet] = useState("");
   const [file, setFile] = useState<File|null>(null);
+  const [errMsg, setErrMsg] = useState('');
 
   const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTweet(e.target.value);
   }
   const onFilechange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setErrMsg('');
     const {files} = e.target;
-    // 2MB 이하의 파일 1개만 업로드
-    // todo: 적절한 오류메시지 보여주기
     if(files && files.length === 1 && (files[0].size <= 2 * 1024 * 1024)) {
       setFile(files[0]);
+    } else {
+      setErrMsg('2MB 이하의 멋진 사진을 1개만 업로드해주세요!');
     }
   }
   const onSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setErrMsg('');
     const user = auth.currentUser;
-    // todo: 적절한 오류메시지 보여주기
-    if (!user || isLoading || !tweet || tweet.length > 180) {
+    if (!user || isLoading) {
+      return;
+    } else if (!tweet || tweet.length > 180) {
+      setErrMsg('180자 이하의 멋진 트윗을 입력해주세요!');
       return;
     }
 
@@ -120,6 +126,7 @@ export default function PostTweetForm() {
       <AttachFileButton htmlFor="file">{file ? "Photo added ✅" : "Add photo"}</AttachFileButton>
       <AttachFileInput onChange={onFilechange} type="file" id="file" accept="image/*"/>
       <SubmitBtn type="submit" value={isLoading ? "Posting..." : "Post Tweet"}/>
+      <ErrorMessage message={errMsg}/>
     </Form>
   );
 }

@@ -7,6 +7,7 @@ import Modal from "react-modal";
 import React, { useState } from "react";
 import useDetectClose from "../hooks/userDetectClose";
 import { DeleteIcon, EditIcon } from "./icon-component";
+import ErrorMessage from "./error-component";
 
 const Wrapper = styled.div`
   display: grid;
@@ -52,6 +53,7 @@ const ModalWrapper = styled.div`
   grid-template-columns: 1fr fit-content(100%);
   gap: 10px;
   width: 100%;
+  margin-bottom: 20px;
 `;
 const TextArea = styled.textarea`
   border: 2px solid white;
@@ -151,16 +153,18 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
         await deleteObject(photoRef);
       }
     } catch (e) {
-      console.log(e);   // todo: 적절한 에러메시지 보여주기
+      console.log(e);
+      alert(e);
     } finally {
 
     }
   };
 
-  // 트윗 수정 - 텍스트
+  // -------------- 트윗 수정 모달 --------------
   const [isModalOpen, setModalOpen] = useState(false);
   const [editText, setEditText] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [errMsg, setErrMsg] = useState('');
   const openModal = () => {
     setEditText(tweet);
     setModalOpen(true);
@@ -171,6 +175,7 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
     setEditPhoto(null);
     setEditPhotoUrl('');
     setDeletePhoto(false);
+    setErrMsg('');
   };
   const modalStyles = {
     overlay: {
@@ -184,14 +189,16 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
       margin: "auto",
       border: "1px solid gray",
       borderRadius: "10px",
-      padding: "20px",
+      padding: "40px",
+      paddingBottom: "20px",
       left: "13%"
     }
   };
+  // 트윗 수정 - 텍스트
   const onEditTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEditText(e.target.value);
   };
-  // 트윗 수정 - 이미지
+  // 트윗 수정 - 이미지 첨부
   const [editPhoto, setEditPhoto] = useState<File | null>(null);
   const [editPhotoUrl, setEditPhotoUrl] = useState('');
   const [deletePhoto, setDeletePhoto] = useState(false);
@@ -206,30 +213,36 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
         var fr = new FileReader();
         fr.onload = () => {
           setDeletePhoto(false);
+          setErrMsg('');
           setEditPhotoUrl(`${fr.result}`);
         };
         fr.readAsDataURL(file);
       }
     } else {
-      // todo: 적절한 메시지 표기
+      setErrMsg('2MB 이하의 멋진 사진을 1개만 업로드해주세요!');
     }
   };
+  // 트윗 수정 - 이미지 삭제
   const onPhotoDelete = (e: React.ChangeEvent) => {
     e.preventDefault();
     setEditPhoto(null);
     setEditPhotoUrl('');
     setDeletePhoto(true);
   };
-  // 트윗 수정 모달에서 Update 클릭
+  // 트윗 수정 모달 - 최종 Update 클릭
   const onEdit = async() => {
-    if (isUpdating || !editText) return;
+    if (isUpdating) return;
+    if (!editText || editText.length > 180) {
+      setErrMsg('180자 이하의 멋진 트윗을 입력해주세요!');
+      return;
+    }
     setIsUpdating(true);
-    // 트윗 수정
+    // 텍스트 update
     const tweetRef = doc(db, "tweets", id);
     await updateDoc(tweetRef, {
       tweet: editText
     });
-    // 사진 수정됐으면 수정 (upsert)
+    // 이미지 수정됐으면 수정 (upsert)
     if (editPhoto) {
       const locationRef = ref(
         storage,
@@ -241,7 +254,7 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
         photo: url
       });
     }
-    // 사진 삭제
+    // 이미지 삭제
     else if (deletePhoto && photo) {
       const photoRef = ref(storage, `tweets/${userId}/${id}`);
       await deleteObject(photoRef);
@@ -253,6 +266,7 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
     setModalOpen(false);
     setIsUpdating(false);
     setEditPhoto(null);
+    setErrMsg('');
   }
 
   return (
@@ -286,13 +300,14 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
               />
             </Column>
           </ModalWrapper>
+          <ErrorMessage message={errMsg}/>
           <ModalSubmitBtn>
             <button className="update" onClick={onEdit}>{isUpdating ? 'Uploading...' : 'Update'}</button>
             <button className="cancel" onClick={closeModal}>Cancel</button>
           </ModalSubmitBtn>
         </Modal>
       </Column>
-      <Column>
+      <Column style={{ alignContent: 'center' }}>
         {photo ? (
           <Photo src={photo} />
         ) : null}
