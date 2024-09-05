@@ -218,7 +218,7 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
         };
         fr.readAsDataURL(file);
       }
-    } else {
+    } else if (!(files && files.length === 0)) {
       setErrMsg('2MB 이하의 멋진 사진을 1개만 업로드해주세요!');
     }
   };

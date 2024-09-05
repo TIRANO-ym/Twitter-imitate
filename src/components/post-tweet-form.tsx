@@ -76,7 +76,7 @@ export default function PostTweetForm() {
     const {files} = e.target;
     if(files && files.length === 1 && (files[0].size <= 2 * 1024 * 1024)) {
       setFile(files[0]);
-    } else {
+    } else if (!(files && files.length === 0)) {
       setErrMsg('2MB 이하의 멋진 사진을 1개만 업로드해주세요!');
     }
   }
