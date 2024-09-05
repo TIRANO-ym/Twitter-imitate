@@ -43,8 +43,6 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
-    
-    console.log(name, email, password);
   }
 
   return (

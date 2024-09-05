@@ -77,7 +77,6 @@ export default function Timeline() {
   
       // 트윗 변경사항 구독 (리스너 추가)
       unsubscribe = await onSnapshot(tweetsQuery, (snapshot) => {
-        console.log(snapshot);
         const tweets = snapshot.docs.map(doc => {
           const {tweet, createdAt, userId, username, photo} = doc.data();
           return {
