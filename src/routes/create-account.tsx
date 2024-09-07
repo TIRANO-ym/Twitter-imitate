@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import ticon from "../assets/images/twitter_icon.jpg";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, db } from "../firebase";
 import { Link, useNavigate } from "react-router-dom";
 import { FirebaseError } from "firebase/app";
 import { firebaseErrorMessage, Wrapper, Title, Input, Switcher, Error, Form } from "../components/auth-component";
 import GithubButton from "../components/github-btn";
+import { doc, setDoc } from "firebase/firestore";
 
 const initialValue = { name: '', email: '', password: '' };
 
@@ -32,10 +33,15 @@ export default function CreateAccount() {
     try {
       setLoading(true);
       const credentials = await createUserWithEmailAndPassword(auth, email, password);
-      console.log(credentials.user);
 
       await updateProfile(credentials.user, {
         displayName: name
+      });
+
+      // users doc에 추가
+      await setDoc(doc(db, "users", credentials.user.uid), {
+        userName: name,
+        photoUrl: ''
       });
 
       navigate("/");
@@ -47,8 +53,6 @@ export default function CreateAccount() {
     } finally {
       setLoading(false);
     }
-    
-    console.log(name, email, password);
   }
 
   return (

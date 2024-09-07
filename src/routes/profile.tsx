@@ -3,7 +3,7 @@ import { auth, db, storage } from "../firebase"
 import React, { useEffect, useState } from "react";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { Unsubscribe, updateProfile } from "firebase/auth";
-import { collection, limit, onSnapshot, orderBy, query, where } from "firebase/firestore";
+import { collection, doc, limit, onSnapshot, orderBy, query, updateDoc, where } from "firebase/firestore";
 import { ITweet } from "../components/timeline";
 import Tweet from "../components/tweet";
 import { DeleteIcon, EditIcon } from "../components/icon-component";
@@ -16,7 +16,7 @@ const Wrapper = styled.div`
   gap: 20px;
 `;
 const AvatarUpload = styled.label`
-overflow: hidden;
+  overflow: hidden;
   width: 180px;
   height: 180px;
   border-radius: 50%;
@@ -98,12 +98,18 @@ export default function Profile() {
     if (!user) return;
     if (files && files.length === 1) {
       const file = files[0];
-      const locationRef = ref(storage, `avatars/${user?.uid}`);
+      const locationRef = ref(storage, `avatars/${user.uid}`);
       const result = await uploadBytes(locationRef, file);
       const avatarUrl = await getDownloadURL(result.ref);
       setAvatar(avatarUrl);
       await updateProfile(user, {
         photoURL: avatarUrl
+      });
+
+      // users doc에도 업데이트
+      const userRef = doc(db, "users", user.uid);
+      await updateDoc(userRef, {
+        photoUrl: avatarUrl
       });
     }
   };
@@ -135,13 +141,15 @@ export default function Profile() {
       // 트윗 구독 (리스너)
       unsubscribe = await onSnapshot(tweetQuery, (snapshot) => {
         const tweets = snapshot.docs.map(doc => {
-          const {tweet, createdAt, userId, username, photo} = doc.data();
+          const {tweet, createdAt, userId, username, photo, likes} = doc.data();
           return {
             tweet,
             createdAt,
             userId,
             username,
             photo,
+            likes: likes || [],
+            userAvatarUrl: user?.photoURL || '',
             id: doc.id
           };
         });
@@ -181,6 +189,12 @@ export default function Profile() {
     setUsername(inputedName);
     setShowInput(false);
     setIsUpdating(false);
+
+    // users doc에도 업데이트
+    const userRef = doc(db, "users", user.uid);
+    await updateDoc(userRef, {
+      userName: inputedName
+    });
   }
   const onCancel = () => {
     if (isUpdating) return;

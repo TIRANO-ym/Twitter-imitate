@@ -38,9 +38,28 @@ const Photo = styled.img`
   border-radius: 15px;
 `;
 
+const AvatarWrapper = styled.div`
+  overflow: hidden;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #1d9bf0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+const AvatarImg = styled.img`
+  width: 100%;
+`;
 const Username = styled.span`
   font-size: 15px;
   font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  svg {
+    width: 15px;
+  }
 `;
 
 const Payload = styled.p`
@@ -132,11 +151,28 @@ const ModalSubmitBtn = styled.div`
   }
 `;
 
+const ReactionBar = styled.div`
+  width: 100%;
+  display: flex;
+  .like {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    svg {
+      width: 20px;
+      cursor: pointer;
+    }
+    svg:hover {
+      opacity: 0.9;
+    }
+  }
+`;
+
 /*
  * userId: 트윗 쓴 user id
  * id: 문서(doc) id
 */
-export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
+export default function Tweet({ username, photo, tweet, userId, id, likes, userAvatarUrl }: ITweet) {
   const user = auth.currentUser;
 
   // 드롭다운 메뉴 구성
@@ -268,11 +304,41 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
     setEditPhoto(null);
     setErrMsg('');
   }
+  // ----------------------------
+  
+  // -------------- 좋아요 --------------
+  const [likeFlag, setLikeFlag] = useState(user ? likes.includes(user.uid) : false);
+  const onLikeClick = async() => {
+    if (user) {
+      const tweetRef = doc(db, "tweets", id);
+      if (likeFlag) {
+        // 좋아요 삭제
+        await updateDoc(tweetRef, {
+          likes: likes.filter(v => v !== user.uid)
+        });
+        setLikeFlag(false);
+      } else {
+        // 좋아요 추가
+        await updateDoc(tweetRef, {
+          likes: [...likes, user.uid]
+        });
+        setLikeFlag(true);
+      }
+    }
+  }
 
   return (
     <Wrapper>
       <Column>
-        <Username>{username}</Username>
+        <Username>
+          <AvatarWrapper>{ userAvatarUrl 
+            ? <AvatarImg src={userAvatarUrl}/>
+            : <svg fill="white" strokeWidth={1.5} stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+              </svg>
+          }</AvatarWrapper>
+          {username}
+        </Username>
         <Payload>{tweet}</Payload>
         <Modal isOpen={isModalOpen} onAfterClose={closeModal} onRequestClose={closeModal} style={modalStyles}>
           <ModalWrapper>
@@ -336,6 +402,14 @@ export default function Tweet({ username, photo, tweet, userId, id }: ITweet) {
           </>
         ): null }
       </Column>
+      <ReactionBar>
+        <span className="like">
+          <svg onClick={onLikeClick} fill={likeFlag ? 'tomato' : 'none'} viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path stroke={likeFlag ? 'none' : 'white'} strokeWidth="2" d="m9.653 16.915-.005-.003-.019-.01a20.759 20.759 0 0 1-1.162-.682 22.045 22.045 0 0 1-2.582-1.9C4.045 12.733 2 10.352 2 7.5a4.5 4.5 0 0 1 8-2.828A4.5 4.5 0 0 1 18 7.5c0 2.852-2.044 5.233-3.885 6.82a22.049 22.049 0 0 1-3.744 2.582l-.019.01-.005.003h-.002a.739.739 0 0 1-.69.001l-.002-.001Z" />
+          </svg>
+          { likes.length }
+        </span>
+      </ReactionBar>
     </Wrapper>
   );
 }

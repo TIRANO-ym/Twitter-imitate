@@ -13,6 +13,7 @@ export interface ITweet {
   username: string;
   createdAt: number;
   userAvatarUrl?: string;
+  likes: string[];
 }
 
 const Wrapper = styled.div`
@@ -68,6 +69,14 @@ export default function Timeline() {
       const snapshotForAllCnt = await getDocs(cntQuery);
       setAllTweetCnt(snapshotForAllCnt.size);
 
+      // 전체 사용자 목록
+      const usersQuery = query(collection(db, "users"));
+      const snapshotForUsers = await getDocs(usersQuery);
+      let allUsers: any = {};
+      snapshotForUsers.docs.forEach((doc) => {
+        allUsers[`${doc.id}`] = doc.data();
+      });
+
       // 트윗 요청 쿼리
       const tweetsQuery = query(
         collection(db, "tweets"),
@@ -78,14 +87,16 @@ export default function Timeline() {
       // 트윗 변경사항 구독 (리스너 추가)
       unsubscribe = await onSnapshot(tweetsQuery, (snapshot) => {
         const tweets = snapshot.docs.map(doc => {
-          const {tweet, createdAt, userId, username, photo} = doc.data();
+          const {tweet, createdAt, userId, username, photo, likes} = doc.data();
           return {
             tweet,
             createdAt,
             userId,
             username,
             photo,
-            id: doc.id
+            likes: likes || [],
+            id: doc.id,
+            userAvatarUrl: allUsers[userId].photoUrl
           };
         });
         setTweet(tweets);
