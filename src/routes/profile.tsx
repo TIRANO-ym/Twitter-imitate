@@ -113,6 +113,7 @@ export default function Profile() {
       });
     }
   };
+  // 프로필 이미지 삭제
   const onAvatarDelete = async (e: React.ChangeEvent) => {
     e.preventDefault();
     const ok = confirm("Are you sure you want to delete your avatar?");
@@ -121,6 +122,12 @@ export default function Profile() {
       photoURL: ""
     });
     setAvatar(null);
+
+    // users doc에도 업데이트
+    const userRef = doc(db, "users", user.uid);
+    await updateDoc(userRef, {
+      photoUrl: ''
+    });
   }
 
   // 본인의 트윗들만 가져오기
