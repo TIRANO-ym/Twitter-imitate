@@ -1,4 +1,3 @@
-import styled from "styled-components";
 import { ITweet } from "./timeline";
 import { auth, db, storage } from "../firebase";
 import { deleteDoc, doc, updateDoc } from "firebase/firestore";
@@ -8,165 +7,8 @@ import React, { useState } from "react";
 import useDetectClose from "../hooks/userDetectClose";
 import { DeleteIcon, EditIcon } from "./icon-component";
 import ErrorMessage from "./error-component";
-
-const Wrapper = styled.div`
-  display: grid;
-  grid-template-columns: 6fr 1fr 0.5fr;
-  padding: 20px;
-  border: 1px solid #ffffff80;
-  border-radius: 15px;
-  .dropdown-menu {
-    position: relative;
-    text-align: right;
-    .menu-button {
-      width: 30px;
-      cursor: pointer;
-    }
-  }
-  .dropdown-menu:hover {
-    .menu-button {
-      opacity: 0.8;
-    }
-  }
-`;
-
-const Column = styled.div``;
-
-const Photo = styled.img`
-  width: 100px;
-  height: 100px;
-  border-radius: 15px;
-`;
-
-const AvatarWrapper = styled.div`
-  overflow: hidden;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background-color: #1d9bf0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-const AvatarImg = styled.img`
-  width: 100%;
-`;
-const Username = styled.span`
-  font-size: 15px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  svg {
-    width: 15px;
-  }
-`;
-
-const Payload = styled.p`
-  margin: 10px 0px;
-  font-size: 18px;
-`;
-
-const ModalWrapper = styled.div`
-  display: grid;
-  grid-template-columns: 1fr fit-content(100%);
-  gap: 10px;
-  width: 100%;
-  margin-bottom: 20px;
-`;
-const TextArea = styled.textarea`
-  border: 2px solid white;
-  padding: 20px;
-  border-radius: 20px;
-  font-size: 16px;
-  color: white;
-  background-color: black;
-  width: 100%;
-  height: 100%;
-  resize: none;
-  font-family: var(--font-nanumfont);
-  &::placeholder {
-    font-size: 16px;
-  }
-  &: focus {
-    outline: none;
-    border-color: #1d9bf0;
-  }
-`;
-const PhotoUpload = styled.label`
-  width: 100px;
-  overflow: hidden;
-  height: 100px;
-  border-radius: 15px;
-  background-color: #ffffff50;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  .phoho-edit-options {
-    display: none;
-    background-color: #00000090;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    padding: 5px;
-    svg:hover {
-      opacity: 0.8;
-    }
-  }
-  svg {
-    width: 100px;
-  }
-  &:hover {
-    .phoho-edit-options {
-      display: flex !important;
-    }
-  }
-`;
-const PhotoInput = styled.input`
-  display: none;
-`;
-const ModalSubmitBtn = styled.div`
-  margin-top: 20px;
-  display: flex;
-  gap: 5px;
-  width: 100%;
-  justify-content: right;
-  button {
-    border: none;
-    font-size: 16px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    cursor: pointer;
-    &:hover,
-    &:active {
-      opacity: 0.9;
-    }
-  }
-  .update {
-    background-color: #1d9bf0;
-    color: white;
-    font-weight: bold;
-  }
-`;
-
-const ReactionBar = styled.div`
-  width: 100%;
-  display: flex;
-  .like {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    svg {
-      width: 20px;
-      cursor: pointer;
-    }
-    svg:hover {
-      opacity: 0.9;
-    }
-  }
-`;
+import { AvatarImg, AvatarWrapper, Column, Li, LinkWrapper, Menu, ModalSubmitBtn, ModalWrapper, Payload, Photo, PhotoInput, PhotoUpload, ReactionBar, TextArea, Ul, Username, Wrapper } from "./tweet-component";
+import { checkValidImage, checkValidTweet } from "./common-rule-component";
 
 /*
  * userId: 트윗 쓴 user id
@@ -241,8 +83,13 @@ export default function Tweet({ username, photo, tweet, userId, id, likes, userA
   const onPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const {files} = e.target;
     if (!user) return;
-    if (files && files.length === 1 && (files[0].size <= 2 * 1024 * 1024)) {
+    if (files && files.length) {
       const file = files[0];
+      const checkRes = checkValidImage(file);
+      if (checkRes.error) {
+        setErrMsg(checkRes.error);
+        return;
+      }
       setEditPhoto(file);
       // 임시 파일 url 지정
       if (FileReader) {
@@ -254,8 +101,6 @@ export default function Tweet({ username, photo, tweet, userId, id, likes, userA
         };
         fr.readAsDataURL(file);
       }
-    } else if (!(files && files.length === 0)) {
-      setErrMsg('2MB 이하의 멋진 사진을 1개만 업로드해주세요!');
     }
   };
   // 트윗 수정 - 이미지 삭제
@@ -268,8 +113,9 @@ export default function Tweet({ username, photo, tweet, userId, id, likes, userA
   // 트윗 수정 모달 - 최종 Update 클릭
   const onEdit = async() => {
     if (isUpdating) return;
-    if (!editText || editText.length > 180) {
-      setErrMsg('180자 이하의 멋진 트윗을 입력해주세요!');
+    const checkText = checkValidTweet(editText);
+    if (checkText.error) {
+      setErrMsg(checkText.error);
       return;
     }
     setIsUpdating(true);
@@ -413,59 +259,3 @@ export default function Tweet({ username, photo, tweet, userId, id, likes, userA
     </Wrapper>
   );
 }
-
-// 드롭다운 메뉴
-const Menu = styled.div`
-  background: #000000ee;
-  position: absolute;
-  text-align: center;
-  box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2);
-  border: 1px solid gray;
-  border-radius: 3px;
-  opacity: 1;
-  visibility: visible;
-  transform: translate(-60%, 5%);
-  z-index: 9;
-}
-`;
-const Ul = styled.ul`
-  & > li {
-    margin-bottom: 10px;
-  }
-
-  & > li:first-of-type {
-    margin-top: 10px;
-  }
-
-  & > li:hover {
-    opacity: 0.9;
-  }
-
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-`;
-const Li = styled.li``;
-const LinkWrapper = styled.a`
-  font-size: 16px;
-  text-decoration: none;
-  color: white;
-  display: flex;
-  padding: 0px 10px;
-  align-items: center;
-  cursor: pointer;
-  a {
-    width: 100px;
-  }
-  svg {
-    margin-left: 5px;
-    height: 20px;
-  }
-  &:hover {
-    opacity: 0.9;
-  }
-`;

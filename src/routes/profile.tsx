@@ -8,6 +8,7 @@ import { ITweet } from "../components/timeline";
 import Tweet from "../components/tweet";
 import { DeleteIcon, EditIcon } from "../components/icon-component";
 import ErrorMessage from "../components/error-component";
+import { checkValidUserName } from "../components/common-rule-component";
 
 const Wrapper = styled.div`
   display: flex;
@@ -185,8 +186,10 @@ export default function Profile() {
   const onSubmit = async() => {
     if (isUpdating || !user) {
       return;
-    } else if (!inputedName || inputedName.length > 20) {
-      setErrMsg('20자 이하의 멋진 이름을 입력해주세요!');
+    }
+    const checkName = checkValidUserName(inputedName);
+    if (checkName.error) {
+      setErrMsg(checkName.error);
       return;
     }
     setErrMsg('');

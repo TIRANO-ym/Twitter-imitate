@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { auth, db, storage } from "../firebase";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import ErrorMessage from "./error-component";
+import { checkValidImage, checkValidTweet } from "./common-rule-component";
 
 const Form = styled.form`
   display: flex;
@@ -71,23 +72,27 @@ export default function PostTweetForm() {
   const onChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTweet(e.target.value);
   }
-  const onFilechange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFilechange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setErrMsg('');
     const {files} = e.target;
-    if(files && files.length === 1 && (files[0].size <= 2 * 1024 * 1024)) {
-      setFile(files[0]);
-    } else if (!(files && files.length === 0)) {
-      setErrMsg('2MB 이하의 멋진 사진을 1개만 업로드해주세요!');
+    if (files && files.length) {
+      const checkRes = checkValidImage(files[0]);
+      if (checkRes.error) {
+        setErrMsg(checkRes.error);
+      } else {
+        setFile(files[0]);
+      }
     }
   }
   const onSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrMsg('');
     const user = auth.currentUser;
+    const checkTweet = checkValidTweet(tweet);
     if (!user || isLoading) {
       return;
-    } else if (!tweet || tweet.length > 180) {
-      setErrMsg('180자 이하의 멋진 트윗을 입력해주세요!');
+    } else if (checkTweet.error) {
+      setErrMsg(checkTweet.error);
       return;
     }
 
