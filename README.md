@@ -1,6 +1,6 @@
 ## Deployed URL
 
-* [https://tirano-ym.github.io/movie-web-app/](https://twitter-imitate.web.app)
+* [https://twitter-imitate.web.app](https://twitter-imitate.web.app)
 
 ## READ ME
 
