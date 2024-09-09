@@ -8,7 +8,7 @@ import useDetectClose from "../hooks/userDetectClose";
 import { DeleteIcon, EditIcon } from "./icon-component";
 import ErrorMessage from "./error-component";
 import { AvatarImg, AvatarWrapper, Column, Li, LinkWrapper, Menu, ModalSubmitBtn, ModalWrapper, Payload, Photo, PhotoInput, PhotoUpload, ReactionBar, TextArea, Ul, Username, Wrapper } from "./tweet-component";
-import { checkValidImage, checkValidTweet } from "./common-rule-component";
+import { checkValidImage, checkValidTweet, resizeImageFile } from "./common-rule-component";
 
 /*
  * userId: 트윗 쓴 user id
@@ -84,12 +84,13 @@ export default function Tweet({ username, photo, tweet, userId, id, likes, userA
     const {files} = e.target;
     if (!user) return;
     if (files && files.length) {
-      const file = files[0];
+      let file = files[0];
       const checkRes = checkValidImage(file);
       if (checkRes.error) {
         setErrMsg(checkRes.error);
         return;
       }
+      file = await resizeImageFile(file);
       setEditPhoto(file);
       // 임시 파일 url 지정
       if (FileReader) {

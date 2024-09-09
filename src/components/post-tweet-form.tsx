@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { auth, db, storage } from "../firebase";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import ErrorMessage from "./error-component";
-import { checkValidImage, checkValidTweet } from "./common-rule-component";
+import { checkValidImage, checkValidTweet, resizeImageFile } from "./common-rule-component";
 
 const Form = styled.form`
   display: flex;
@@ -80,7 +80,7 @@ export default function PostTweetForm() {
       if (checkRes.error) {
         setErrMsg(checkRes.error);
       } else {
-        setFile(files[0]);
+        setFile(await resizeImageFile(files[0]));
       }
     }
   }
