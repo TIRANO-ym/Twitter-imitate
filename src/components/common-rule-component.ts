@@ -36,8 +36,8 @@ export const resizeImageFile = (file: File): Promise<File> => {
       const _IMG = new Image();
       _IMG.src = `${fileReader.result}`;
       _IMG.onload = () => {
-        const width = 100;  // 기준 사이즈. 가로세로 100px
-        const height = 100;
+        const width = 300;  // 기준 사이즈. 가로세로 300px (100으로 딱맞추면 화질구지)
+        const height = 300;
         // canvas에 이미지 객체를 리사이징해서 담는 과정
         let canvas = document.createElement("canvas");
         canvas.width = width;
