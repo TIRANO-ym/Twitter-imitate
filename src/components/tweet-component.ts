@@ -214,3 +214,10 @@ export const LinkWrapper = styled.a`
     opacity: 0.9;
   }
 `;
+
+export const PostDateSpan = styled.span`
+  font-weight: normal;
+  font-size: 0.9rem;
+  color: gray;
+  margin-top: 5px;
+`;

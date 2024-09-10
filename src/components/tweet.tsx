@@ -7,14 +7,15 @@ import React, { useState } from "react";
 import useDetectClose from "../hooks/userDetectClose";
 import { DeleteIcon, EditIcon } from "./icon-component";
 import ErrorMessage from "./error-component";
-import { AvatarImg, AvatarWrapper, Column, Li, LinkWrapper, Menu, ModalSubmitBtn, ModalWrapper, Payload, Photo, PhotoInput, PhotoUpload, ReactionBar, TextArea, Ul, Username, Wrapper } from "./tweet-component";
+import { AvatarImg, AvatarWrapper, Column, Li, LinkWrapper, Menu, ModalSubmitBtn, ModalWrapper, Payload, Photo, PhotoInput, PhotoUpload, ReactionBar, TextArea, Ul, Username, Wrapper, PostDateSpan } from "./tweet-component";
 import { checkValidImage, checkValidTweet, resizeImageFile } from "./common-rule-component";
+import moment from "moment";
 
 /*
  * userId: 트윗 쓴 user id
  * id: 문서(doc) id
 */
-export default function Tweet({ username, photo, tweet, userId, id, likes, userAvatarUrl }: ITweet) {
+export default function Tweet({ username, photo, tweet, userId, id, likes, userAvatarUrl, createdAt }: ITweet) {
   const user = auth.currentUser;
 
   // 드롭다운 메뉴 구성
@@ -185,6 +186,7 @@ export default function Tweet({ username, photo, tweet, userId, id, likes, userA
               </svg>
           }</AvatarWrapper>
           {username}
+          <PostDate createdAt={createdAt}/>
         </Username>
         <Payload>{tweet}</Payload>
         <Modal isOpen={isModalOpen} onAfterClose={closeModal} onRequestClose={closeModal} style={modalStyles}>
@@ -258,5 +260,33 @@ export default function Tweet({ username, photo, tweet, userId, id, likes, userA
         </span>
       </ReactionBar>
     </Wrapper>
+  );
+}
+
+function PostDate({ createdAt }: { createdAt: number }) {
+  let diff = moment().diff(moment(createdAt), 'minute');
+  let unit = 'minutes';
+  let result = 'just now';
+  if (diff > 0) {
+    if (diff > 60) {
+      diff = diff / 60;
+      unit = 'hours';
+      if (diff > 24) {
+        diff = diff / 24;
+        unit = 'days';
+        if (diff > 30) {
+          diff = diff / 30;
+          unit = 'months';
+          if (diff > 12) {
+            diff = diff / 12;
+            unit = 'years';
+          }
+        }
+      }
+    }
+    result = `${Math.round(diff)} ${unit} ago`;
+  }
+  return (
+    <PostDateSpan>{result}</PostDateSpan>
   );
 }
