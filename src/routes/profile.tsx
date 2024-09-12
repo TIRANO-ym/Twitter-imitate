@@ -3,23 +3,26 @@ import { auth, db, storage } from "../firebase"
 import React, { useEffect, useState } from "react";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { Unsubscribe, updateProfile } from "firebase/auth";
-import { collection, doc, limit, onSnapshot, orderBy, query, updateDoc, where } from "firebase/firestore";
+import { collection, doc, getDocs, limit, onSnapshot, orderBy, query, updateDoc, where } from "firebase/firestore";
 import { ITweet } from "../components/timeline";
 import Tweet from "../components/tweet";
 import { DeleteIcon, EditIcon } from "../components/icon-component";
 import ErrorMessage from "../components/error-component";
 import { checkValidUserName } from "../components/common-rule-component";
+import { Loading, LoadingWrapper, LoadMore } from "../components/tweet-component";
 
 const Wrapper = styled.div`
   display: flex;
   align-items: center;
   flex-direction: column;
   gap: 20px;
+  // height: 100%;
+  overflow-y: hidden;
 `;
 const AvatarUpload = styled.label`
   overflow: hidden;
   width: 180px;
-  height: 180px;
+  min-height: 180px;
   border-radius: 50%;
   background-color: #1d9bf0;
   cursor: pointer;
@@ -62,6 +65,7 @@ const Tweets = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow-y: scroll;
 `;
 
 const NameWrapper = styled.div`
@@ -133,17 +137,27 @@ export default function Profile() {
 
   // 본인의 트윗들만 가져오기
   const [tweets, setTweets] = useState<ITweet[]>([]);
+  const [limitCnt, setLimitCnt] = useState(25);
+  const [isAddLoading, setIsAddLoading] = useState(false);
+  const [allTweetCnt, setAllTweetCnt] = useState(0);
 
   useEffect(() => {
     let unsubscribe: Unsubscribe | null = null;
     const fetchTweets = async() => {
+      // 전체 카운트
+      const cntQuery = query(
+        collection(db, "tweets"),
+        where("userId", "==", user?.uid)
+      );
+      const snapshotForAllCnt = await getDocs(cntQuery);
+      setAllTweetCnt(snapshotForAllCnt.size);
+
       // 트윗 요청 쿼리
-      // todo: 25개 이상 추가 로드 옵션 (더보기 혹은 스크롤 액션)
       const tweetQuery = query(
         collection(db, "tweets"),
         where("userId", "==", user?.uid),
         orderBy("createdAt", "desc"),
-        limit(25)
+        limit(limitCnt)
       );
 
       // 트윗 구독 (리스너)
@@ -162,15 +176,20 @@ export default function Profile() {
           };
         });
         setTweets(tweets);
+        setIsAddLoading(false);
       });
     };
     fetchTweets();
 
-    // 안보거나 종료 시 구독 취소
+    // 안보거나 종료 시 구독 취소 (+ Load more 클릭 시 리렌더링되면서 기존 구독사항도 종료된다.)
     return () => {
       unsubscribe && unsubscribe();
     }
-  }, []);
+  }, [limitCnt]);
+  const onClickAddLimit = () => {
+    setIsAddLoading(true);
+    setLimitCnt(prev => prev + 25);
+  };
 
   // 닉네임 변경
   const [showInput, setShowInput] = useState(false);
@@ -259,7 +278,16 @@ export default function Profile() {
           </NameWrapper>
       }
       <ErrorMessage message={errMsg}/>
-      <Tweets>{tweets.map(tweet => <Tweet key={tweet.id} {...tweet}></Tweet>)}</Tweets>
+      <Tweets>
+        {tweets.map(tweet => <Tweet key={tweet.id} {...tweet}></Tweet>)}
+        {
+          (limitCnt < allTweetCnt) ? (
+            isAddLoading 
+              ? <LoadingWrapper><Loading/></LoadingWrapper> 
+              : <LoadMore onClick={onClickAddLimit}>Load more...</LoadMore>
+          ) : null
+        }
+      </Tweets>
     </Wrapper>
   )
 }

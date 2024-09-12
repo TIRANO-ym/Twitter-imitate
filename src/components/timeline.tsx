@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { db } from "../firebase";
 import Tweet from "./tweet";
 import { Unsubscribe } from "firebase/auth";
+import { Loading, LoadingWrapper, LoadMore } from "./tweet-component";
 
 export interface ITweet {
   id: string;
@@ -21,38 +22,6 @@ const Wrapper = styled.div`
   gap: 10px;
   flex-direction: column;
   overflow-y: scroll;
-`;
-
-const LoadMore = styled.div`
-  width: 100%;
-  color: #1d9bf0;
-  text-align: center;
-  cursor: pointer;
-  &:hover {
-    font-weight: bold;
-    text-decoration : underline;
-  }
-`;
-const LoadingWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-const Loading = styled.div`
-  width: 25px;
-  padding: 5px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: #1d9bf0;
-  --_m: 
-    conic-gradient(#0000 10%,#000),
-    linear-gradient(#000 0 0) content-box;
-  -webkit-mask: var(--_m);
-          mask: var(--_m);
-  -webkit-mask-composite: source-out;
-          mask-composite: subtract;
-  animation: l3 1s infinite linear;
-  @keyframes l3 {to{transform: rotate(1turn)}}
 `;
 
 export default function Timeline() {
